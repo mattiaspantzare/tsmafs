@@ -1,0 +1,23 @@
+	$Id: README,v 1.2 2009/06/05 11:35:20 ragge Exp $
+
+Howto get started:
+
+I have only compiled this on Linux RHEL4 with the TSM 5.4 API.
+
+1) Fetch the source. 
+2) Modify the Makefile if the tsm headers are not in a standard place.
+3) Be sure that the afs headers and libraries are installed in the system.
+4) Compile.
+
+...now you should have tabackup and tarestore.
+
+5) Create (via tsm tools) an environment that uses password=generate, so
+   that the backup programs don't have to care about tsm auth.  Use the
+   same nodename in TSM even if you have multiple AFS file servers, so that
+   a moved volume will be backed up only once.
+6) Fetch a token for an user that have enough power to read the volumes.
+7) Try "tabackup -v mytestvolume" to see if it works. Running it multiple
+   times should only save files the first time.
+
+Note that tabackup only reads backup volumes, but it do not create them.
+You have to do that yourself before running tabackup.

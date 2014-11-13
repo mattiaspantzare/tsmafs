@@ -1,0 +1,27 @@
+	$Id: TODO,v 1.5 2012/01/18 10:48:53 ragge Exp $
+
+- Write man pages!
+
+Things that are not yet implemented in tabackup:
+
+- Be able to specify archival of volume, it's not implemented yet.
+
+- Be able to specify subdirectories inside volume to backup.
+
+- Support to give EXCLUDE etc. directives in dsm.sys.
+
+- Use localauth.  Do not work at all.
+
+- Use TSM logging functions.
+
+- Escape control characters (below ascii 32) in filenames.
+
+Things that are not yet implemented in tarestore:
+
+- Understand afs so that a volume can be written back directly into 
+  another volume.
+
+- Restore ACLs.
+
+- Better restore command-line syntax, currently requires knowledge of 
+  TSM internals.

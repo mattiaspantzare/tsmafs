@@ -1,0 +1,97 @@
+	$Id: IMPLEMENTATION,v 1.4 2012/01/16 11:31:56 ragge Exp $
+
+Syntax for the backup client is:
+
+# tabackup [-v volume] [-f filespace] [-s server] [-p partition]
+	[-alnd] [subdirectories in volume...]
+
+	-v volume is a volume name to backup.  volume can be wildcarded,
+	for example "staff.a*" matches all volumes with starting name staff.a
+
+	-f filespace specifies the filespace to store in.  Default is
+	just the cell name.
+
+	-s server is the server to fetch volumes from. Default is all.
+
+	-p partition is the partition that should be backed up. Default is all.
+
+	-a tells that the files should be marked "archive" instead 
+	of "backup" in tsm. XXX NOT IMPLEMENTED
+
+	-l Do localauth instead of using tokens with access rights.
+	XXX NOT IMPLEMENTED
+
+	-n Dry-run; tell TSM to do an abort after each transaction.
+
+	-d Debug flag, spits out lot of information.
+
+	-F Force traversal through volume even if it has the same 
+	timestamp as the version currently in TSM.
+
+	One or more subdirectories or files inside the volume(s) can be
+	given as argument.  If not given, a full volume will be assumed.
+	XXX NOT IMPLEMENTED
+
+Storage in TSM space:
+
+	Filespace: 	/fs-group
+	High-lvl name:	/volume/path-in-volume
+	Low-lvl name:	/filename
+
+A volume is a separate object which contains attributes that describe
+which server and partition where the volume is located.
+
+Each directory is a separate object that contains attributes for:
+	- uid/gid/mode (unix goof)
+	- Access control lists
+
+Each file also stores attributes that describes its unix bits.
+
+The TSM backup client reads a backup volume using low-level rx calls and puts
+all files and directories into TSM space as separate objects.
+The restore client writes back files there you are in the directory
+tree and cannot write directly into volumes in style of "vos restore",
+at least not in the first version.
+
+The fs-group that might be given in filespace is just a way to avoid
+saving too many objects in one filespace; tsm gets slow then.
+The same with too many filespaces, tsm will get slow if there are 
+too many of them, otherwise the volume name could have been stored there.
+
+Some examples:
+
+We have the volume "nisse" with one directory "kalle" and one file "pelle"
+in that directory. The cell is called "per.nu".
+
+The following objects will be stored:
+
+	FS	HL		LL	Data?	Desc
+	/per.nu	/		/nisse	no	Volume information
+	/per.nu	/nisse		/	no	Top-level directory information
+	/per.nu	/nisse		/kalle	no	Directory information
+	/per.nu	/nisse/kalle	/pelle	yes	File + file info
+
+The volume/directory attributes (ACLs etc...) are stored as object 
+attributes.  TSM have two type of objects, directories and files, and
+directories can be stored without any data associated with it.
+
+Sequence of operation; from top directory.
+	Fetch directory list and attributes from tsm
+	Fetch directory list and attributes from afs
+	Compare attributes
+	if (attributes differ)
+		update attributes
+	Compare directory members.
+	for (each file in tsm but not in afs)
+		set object inactive.
+	for (each file in afs but not in tsm)
+		store file in tsm
+	for (each dir in afs but not in tsm)
+		store dir attributes in tsm
+		traverse dir down
+	for (each dir in tsm but not in afs)
+		set object inactive + all objects below.
+	for (each dir not yet handled)
+		traverse dir down
+
+
